@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Crowd Detection AI</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            text-align: center;
+            margin: 0;
+            padding: 20px;
+            background-color: #f4f4f4;
+        }
+        h1 {
+            color: #333;
+        }
+        #uploadForm {
+            margin: 20px auto;
+            padding: 20px;
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.1);
+            display: inline-block;
+        }
+        input[type="file"] {
+            padding: 10px;
+        }
+        button {
+            padding: 10px 20px;
+            background: #28a745;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            margin-top: 10px;
+        }
+        button:hover {
+            background: #218838;
+        }
+        #result {
+            margin-top: 20px;
+        }
+        img {
+            max-width: 100%;
+            margin-top: 10px;
+            border-radius: 8px;
+        }
+        .live-feed {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            margin-top: 20px;
+        }
+        .live-feed img {
+            width: 80%;
+            max-width: 640px;
+            border-radius: 8px;
+        }
+    </style>
+</head>
+<body>
+
+    <h1>AI-Powered Crowd Detection</h1>
+
+    <!-- Upload Form -->
+    <div id="uploadForm">
+        <h3>Upload an Image for Detection</h3>
+        <input type="file" id="fileInput" accept="image/*">
+        <button onclick="uploadImage()">Detect Crowd</button>
+    </div>
+
+    <!-- Detection Result -->
+    <div id="result"></div>
+
+    <!-- Live Camera Feed -->
+    <div class="live-feed">
+        <h3>Live Crowd Detection</h3>
+        <img id="cameraFeed" src="{{ url_for('camera_feed') }}" alt="Live Camera Feed">
+        <h4>People Count: <span id="liveCount">0</span></h4>
+    </div>
+
+    <script>
+        function uploadImage() {
+            let fileInput = document.getElementById("fileInput");
+            if (fileInput.files.length === 0) {
+                alert("Please select an image to upload.");
+                return;
+            }
+
+            let formData = new FormData();
+            formData.append("file", fileInput.files[0]);
+
+            fetch("/upload", {
+                method: "POST",
+                body: formData
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.error) {
+                    alert("Error: " + data.error);
+                } else {
+                    document.getElementById("result").innerHTML = `
+                        <h3>Detection Result</h3>
+                        <p>Total People Detected: <strong>${data.total_people_detected}</strong></p>
+                        <img src="${data.processed_image}" alt="Processed Image">
+                    `;
+                }
+            })
+            .catch(error => {
+                console.error("Error:", error);
+                alert("An error occurred while processing the image.");
+            });
+        }
+
+        function updateLiveCount() {
+            fetch("/live_count")
+            .then(response => response.json())
+            .then(data => {
+                document.getElementById("liveCount").innerText = data.current_count;
+            })
+            .catch(error => {
+                console.error("Error fetching live count:", error);
+                document.getElementById("liveCount").innerText = "Error";
+            });
+        }
+
+        // Refresh live crowd count every 2 seconds
+        setInterval(updateLiveCount, 2000);
+    </script>
+
+</body>
+</html>

@@ -1,0 +1,10 @@
+
+ultralytics 
+flask 
+flask-cors 
+opencv-python 
+deep_sort_realtime 
+torch 
+numpy 
+requests
+
